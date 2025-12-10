@@ -1,0 +1,14 @@
+spring.application.name=AirBnb-App
+
+#Db configuration
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/your Db_name
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.show-sql=true
+
+#spring.datasource.driver-class-name=org.postgresql.Driver
+
+server.servlet.context-path=/api/v1
