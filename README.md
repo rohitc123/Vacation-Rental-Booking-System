@@ -1,61 +1,52 @@
-Vacation-Rental-Booking-System
+# Vacation-Rental-Booking-System
 
-A scalable backend system inspired by Airbnb, built using Spring Boot, PostgreSQL, JPA, DTO architecture, Global Exception Handling, Pricing Strategy Pattern, and Scheduled Jobs.
+A scalable backend system inspired by Airbnb, built using **Spring Boot, PostgreSQL, JPA, DTO architecture, Global Exception Handling, Pricing Strategy Pattern, and Scheduled Jobs**.
 
-Features
+---
 
-1) Hotel & Room Management
+## Features
 
-  - Create, update, delete hotels
+### Hotel & Room Management
+- Create, update, delete hotels  
+- Add rooms, inventory, contact info  
+- Update minimum pricing  
+- Structured DTO-based responses  
 
-  - Add rooms, inventory, contact info
+### Hotel Browsing
+- Paginated hotel search  
+- Filter hotels  
+- Fetch hotel details with rooms  
 
-  - Update minimum pricing
+### Booking Workflow
+- Initiate booking  
+- Add guest details  
+- Initiate payment  
+- Capture payment  
 
-  - Structured DTO-based responses
-    
+### Dynamic Pricing Engine
+- Using **Strategy + Decorator Pattern**  
+- Base price  
+- Surge pricing  
+- Urgency pricing  
+- Holiday pricing  
+- Occupancy-based pricing  
 
-2) Hotel Browsing
+### Scheduler
+- Auto-update dynamic pricing every X minutes  
 
-  - Paginated hotel search
+### Exception Handling
+- `GlobalExceptionHandler`  
+- Standard `ApiResponse` & `ApiError` format
 
-  - Filter hotels
 
-  - Fetch hotel details with rooms
-    
+## Tech Stack
 
-3) Booking Workflow
+- **Backend:** Spring Boot  
+- **Database:** PostgreSQL  
+- **ORM:** Spring Data JPA  
+- **Build Tool:** Maven  
+- **Design Patterns:** Strategy + Decorator  
+- **Scheduler:** Spring Scheduling  
+- **Object Mapping:** ModelMapper / MapStruct
+- **Security:** Spring Security
 
-  - Initiate booking
-
-  - Add guest details
-
-  - Initiate payment
-
-  - Capture payment
-    
-
-4) Dynamic Pricing Engine
-
-  - Using Strategy + Decorator Pattern
-
-  - Base price
-
-  - Surge pricing
-
-  - Urgency pricing
-
-  - Holiday pricing
-
-  - Occupancy-based pricing
-    
-
-5) Scheduler
-
-  - Auto-update dynamic pricing every X minutes
-
-6) Exception Handling
-
-  - GlobalExceptionHandler
-
-  - Standard ApiResponse & ApiError format
