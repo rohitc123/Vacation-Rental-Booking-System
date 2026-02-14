@@ -8,10 +8,17 @@ import com.example.AirBnb.App.entities.enums.BookingStatus;
 import com.example.AirBnb.App.exception.ForbiddenException;
 import com.example.AirBnb.App.exception.ResourceNotFoundException;
 import com.example.AirBnb.App.repository.*;
+import com.example.AirBnb.App.stratergy.PricingService;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Event;
+import com.stripe.model.Refund;
+import com.stripe.model.checkout.Session;
+import com.stripe.param.RefundCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +38,11 @@ public class BookingServiceImpl implements BookingService{
     private final InventoryRepository inventoryRepository;
     private final BookingRepository bookingRepository;
     private final ModelMapper modelMapper;
+    private final CheckoutService checkoutService;
+    private final PricingService pricingService;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Override
     @Transactional
@@ -63,11 +75,15 @@ public class BookingServiceImpl implements BookingService{
 
         //reserve the room/update the booked count
 
-        for(Inventory inventory:inventoryList){
-            inventory.setReservedCount(inventory.getReservedCount()+bookingRequest.getRoomCount());
-        }
+       inventoryRepository.initBooking(room.getId(),hotel.getId(),
+               bookingRequest.getCheckInDate(),bookingRequest.getCheckoutDate(),
+               bookingRequest.getRoomCount());
 
-        inventoryRepository.saveAll(inventoryList);
+        //calculating the total price of requested room count
+        BigDecimal priceForOneRoom= pricingService.calculateTotalPrice(inventoryList);
+        BigDecimal totalPrice=priceForOneRoom.multiply(BigDecimal.valueOf(bookingRequest.getRoomCount()));
+
+
 
         //create the booking
 
@@ -81,7 +97,7 @@ public class BookingServiceImpl implements BookingService{
                 .checkOutDate(bookingRequest.getCheckoutDate())
                 .user(getCurrentUser())
                 .roomsCount(bookingRequest.getRoomCount())
-                .amount(BigDecimal.TEN)
+                .amount(totalPrice)
                 .build();
 
         booking=bookingRepository.save(booking);
@@ -91,6 +107,7 @@ public class BookingServiceImpl implements BookingService{
     }
 
     @Override
+    @Transactional
     public BookingDto addGuests(Long bookingId, List<GuestDto> guestDtoList) {
 
         log.info("Adding guest with booking id:{}",bookingId);
@@ -100,9 +117,10 @@ public class BookingServiceImpl implements BookingService{
 
         User user=getCurrentUser();
 
-        if (!user.equals(booking.getUser())) {
+        if (!user.getId().equals(booking.getUser().getId())) {
             throw new ForbiddenException("Booking does not belong to the current user");
         }
+
 
         //check  booking is expired or not
         if(hasBookingExpired(booking)){
@@ -125,6 +143,123 @@ public class BookingServiceImpl implements BookingService{
         booking.setBookingStatus(BookingStatus.GUESTS_ADDED);
         booking=bookingRepository.save(booking);
         return modelMapper.map(booking,BookingDto.class);
+    }
+
+    @Override
+    @Transactional
+    public String initiatePayment(Long bookingId) {
+        Booking booking=bookingRepository.findById(bookingId)
+                .orElseThrow(()->new ResourceNotFoundException("Booking not found with id:"+bookingId));
+
+        User user=getCurrentUser();
+
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("Booking does not belong to the current user");
+        }
+
+        //check  booking is expired or not
+        if(hasBookingExpired(booking)){
+            throw new IllegalStateException("booking has already expired");
+        }
+
+        String sessionUrl= checkoutService.getCheckoutSession(booking,
+                frontendUrl+"/success",frontendUrl+"/failure");
+
+        booking.setBookingStatus(BookingStatus.PAYMENT_PENDING);
+        bookingRepository.save(booking);
+        return sessionUrl;
+    }
+
+    //Capturing the Event
+
+    @Override
+    @Transactional
+    public void capturePayment(Event event) {
+
+        if ("checkout.session.completed".equals(event.getType())){
+            //get session
+            Session session= (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+            if(session==null) return;
+
+            String sessionId=session.getId();
+            Booking booking=bookingRepository.findByPaymentSessionId(sessionId).orElseThrow(()->
+                    new ResourceNotFoundException("Booking not found to this session Id {}"+sessionId));
+
+            //now conform booking
+            booking.setBookingStatus(BookingStatus.CONFIRMED);
+            bookingRepository.save(booking);
+
+            //update booking count in inventory
+            inventoryRepository.findAndLockReservedInventory(booking.getRoom().getId(),
+                    booking.getCheckInDate(),booking.getCheckOutDate(),booking.getRoomsCount());
+
+            inventoryRepository.conformBooking(booking.getHotel().getId(),booking.getRoom().getId(),
+                    booking.getCheckInDate(),booking.getCheckOutDate(),booking.getRoomsCount());
+
+            log.info("Successfully conform the booking with id:{}",booking.getId());
+
+        }else {
+            log.warn("Unhandled Event type:{} ",event.getType());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void cancelBooking(Long bookingId) {
+        log.info("Cancelling the booking of this booking id:{}",bookingId);
+        Booking booking=bookingRepository.findById(bookingId)
+                .orElseThrow(()->new ResourceNotFoundException("Booking not found with id:"+bookingId));
+
+        User user=getCurrentUser();
+
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("Booking does not belong to the current user");
+        }
+
+        if(booking.getBookingStatus()!=BookingStatus.CONFIRMED){
+            throw new IllegalStateException("only conform booking can be canceled");
+        }
+
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
+
+        // Lock and update inventory to prevent race conditions
+
+        inventoryRepository.findAndLockReservedInventory(booking.getRoom().getId(),
+                booking.getCheckInDate(),booking.getCheckOutDate(),booking.getRoomsCount());
+
+        inventoryRepository.cancelBooking(booking.getHotel().getId(),booking.getRoom().getId(),
+                booking.getCheckInDate(),booking.getCheckOutDate(),booking.getRoomsCount());
+
+        //handle refund
+
+        try {
+            //Retrieve the Stripe Session to get the PaymentIntent ID
+            Session session=Session.retrieve(booking.getPaymentSessionId());
+            RefundCreateParams refundParam=RefundCreateParams.builder()
+                    .setPaymentIntent(session.getPaymentIntent())
+                    .build();
+            Refund.create(refundParam);
+        } catch (StripeException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.info("Booking has been successfully cancelled of this booking id:{}",bookingId);
+
+    }
+
+    @Override
+    public String getBookingStatus(Long bookingId) {
+        Booking booking=bookingRepository.findById(bookingId)
+                .orElseThrow(()->new ResourceNotFoundException("Booking not found with id:"+bookingId));
+
+        User user=getCurrentUser();
+
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("Booking does not belong to the current user");
+        }
+
+        return booking.getBookingStatus().name();
     }
 
 

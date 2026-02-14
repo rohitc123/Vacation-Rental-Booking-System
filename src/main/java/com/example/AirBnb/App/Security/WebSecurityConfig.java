@@ -47,6 +47,7 @@ public class WebSecurityConfig {
                         ).permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("HOTEL_MANAGER")
                         .requestMatchers("/booking/**").authenticated()
+                        .requestMatchers("/webhook/**").permitAll()
                         .anyRequest().authenticated()
         ).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exHandlingConfig->exHandlingConfig

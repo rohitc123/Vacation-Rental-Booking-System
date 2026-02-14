@@ -12,3 +12,12 @@ spring.jpa.show-sql=true
 #spring.datasource.driver-class-name=org.postgresql.Driver
 
 server.servlet.context-path=/api/v1
+
+
+
+jwt.SecretKey=your jwt secrete key
+
+frontend.url=
+
+stripe.secret.key=your stripe secrete key
+stripe.webhook.secret= your webhook secrete key
