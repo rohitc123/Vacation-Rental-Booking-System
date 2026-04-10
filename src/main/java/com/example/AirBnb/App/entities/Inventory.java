@@ -62,5 +62,4 @@ public class Inventory {
     private LocalDateTime updatedAt;
 
 
-
 }

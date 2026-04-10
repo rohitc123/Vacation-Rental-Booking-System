@@ -4,6 +4,8 @@ import com.example.AirBnb.App.dto.HotelDto;
 import com.example.AirBnb.App.dto.HotelInfoDto;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 public interface HotelService {
 
@@ -18,4 +20,6 @@ public interface HotelService {
     void activateHotel(Long hotelId);
 
     HotelInfoDto getHotelInfoById(Long hotelId);
+
+    List<HotelDto> getAllHotels();
 }
