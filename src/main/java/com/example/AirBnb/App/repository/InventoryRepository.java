@@ -141,14 +141,14 @@ public interface InventoryRepository extends JpaRepository<Inventory,Long> {
             @Param("numberOfRooms") int numberOfRooms
     );
 
-    @Modifying
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT i FROM Inventory i
             WHERE i.room.id = :roomId
             AND i.date BETWEEN :startDate AND :endDate
             """)
-    void  getInventoryAndLockBeforeUpdate(
+    List<Inventory> getInventoryAndLockBeforeUpdate(
             @Param("roomId") Long roomId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
@@ -157,7 +157,7 @@ public interface InventoryRepository extends JpaRepository<Inventory,Long> {
     @Modifying
     @Query("""
             UPDATE Inventory i
-            SET i.surgeFactor = :surgeFactor
+            SET i.surgeFactor = :surgeFactor,
             i.closed= :closed
             WHERE i.room.id = :roomId
             AND i.date BETWEEN :startDate AND :endDate
@@ -166,10 +166,11 @@ public interface InventoryRepository extends JpaRepository<Inventory,Long> {
             @Param("roomId") Long roomId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
-            @Param("sergeFactor") BigDecimal surgeFactor
+            @Param("surgeFactor") BigDecimal surgeFactor,
+            @Param("closed") Boolean closed
     );
 
     List<Inventory> findByHotelAndDateBetween(Hotel hotel, LocalDate startDate, LocalDate endDate);
 
-    List<InventoryDto> findByRoomOrderByDate(Room room);
+    List<Inventory> findByRoomOrderByDate(Room room);
 }

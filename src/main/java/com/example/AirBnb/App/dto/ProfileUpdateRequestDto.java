@@ -1,5 +1,6 @@
 package com.example.AirBnb.App.dto;
 
+import com.example.AirBnb.App.entities.enums.Gender;
 import lombok.Data;
 
 import java.time.LocalDate;

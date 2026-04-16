@@ -37,6 +37,7 @@ public class Hotel {
     private boolean active;
 
     @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     @CreationTimestamp

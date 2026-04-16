@@ -45,6 +45,14 @@ public class WebSecurityConfig {
                                 "/auth/login",
                                 "/auth/refresh"
                         ).permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("HOTEL_MANAGER")
                         .requestMatchers("/booking/**").authenticated()
                         .requestMatchers("/webhook/**").permitAll()

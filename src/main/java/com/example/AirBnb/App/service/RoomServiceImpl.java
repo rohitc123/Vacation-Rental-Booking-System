@@ -38,7 +38,7 @@ public class RoomServiceImpl implements RoomService{
                 .findById(hotelId)
                 .orElseThrow(()->new ResourceNotFoundException("Hotel not found with id "+hotelId));
         User user= getCurrentUser();
-        if(user.equals(hotel.getOwner())){
+        if(!user.equals(hotel.getOwner())){
             throw new ForbiddenException("this user does not own this hotel"+hotelId);
         }
         Room room =modelMapper.map(roomDto,Room.class);
@@ -59,7 +59,7 @@ public class RoomServiceImpl implements RoomService{
                 .findById(hotelId)
                 .orElseThrow(()->new ResourceNotFoundException("Hotel not found with id "+hotelId));
         User user= getCurrentUser();
-        if(user.equals(hotel.getOwner())){
+        if(!user.equals(hotel.getOwner())){
             throw new ForbiddenException("this user does not own this hotel"+hotelId);
         }
         return hotel.getRooms()
@@ -76,7 +76,7 @@ public class RoomServiceImpl implements RoomService{
                 .findById(roomId)
                 .orElseThrow(()->new ResourceNotFoundException("Room not found with id "+roomId));
         User user= getCurrentUser();
-        if(user.equals(room.getHotel().getOwner())){
+        if(!user.equals(room.getHotel().getOwner())){
             throw new ForbiddenException("this user does not own this hotel"+room.getHotel().getId());
         }
         return modelMapper.map(room,RoomDto.class);
@@ -93,7 +93,7 @@ public class RoomServiceImpl implements RoomService{
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found with id " + roomId));
 
         User user= getCurrentUser();
-        if(user.equals(room.getHotel().getOwner())){
+        if(!user.equals(room.getHotel().getOwner())){
             throw new ForbiddenException("this user does not own this hotel"+room.getHotel().getId());
         }
         inventoryService.deleteAllInventories(room);

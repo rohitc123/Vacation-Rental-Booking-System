@@ -301,6 +301,13 @@ public class BookingServiceImpl implements BookingService{
             throw new AccessDeniedException("You are not the owner of this hotel of id: "+hotelId);
         }
 
+        if (startDate == null) {
+            startDate = LocalDate.now().minusDays(30);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+
         LocalDateTime startDateTime=startDate.atStartOfDay();
         LocalDateTime endDateTime=endDate.atTime(LocalTime.MAX);
 

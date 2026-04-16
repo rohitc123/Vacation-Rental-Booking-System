@@ -10,4 +10,5 @@ public class UpdateInventoryRequestDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal surgeFactor;
+    private Boolean closed;
 }

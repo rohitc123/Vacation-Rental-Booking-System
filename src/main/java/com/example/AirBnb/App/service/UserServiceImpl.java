@@ -2,12 +2,15 @@ package com.example.AirBnb.App.service;
 
 import com.example.AirBnb.App.dto.BookingDto;
 import com.example.AirBnb.App.dto.ProfileUpdateRequestDto;
+import com.example.AirBnb.App.dto.UserDto;
 import com.example.AirBnb.App.entities.User;
 import com.example.AirBnb.App.exception.ResourceNotFoundException;
 import com.example.AirBnb.App.repository.BookingRepository;
 import com.example.AirBnb.App.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,9 +22,11 @@ import static com.example.AirBnb.App.util.AppUtils.getCurrentUser;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
 
     @Override
@@ -43,6 +48,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if(profileUpdateRequestDto.getDateOfBirth()!=null) user.setDateOfBirth(profileUpdateRequestDto.getDateOfBirth());
 
         userRepository.save(user);
+    }
+
+    @Override
+    public UserDto getMyProfile() {
+        User user=getCurrentUser();
+        log.info("Getting profile for user with id:{}",user.getId());
+        return modelMapper.map(user, UserDto.class);
     }
 
 

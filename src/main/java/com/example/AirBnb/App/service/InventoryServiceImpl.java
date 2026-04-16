@@ -96,8 +96,10 @@ public class InventoryServiceImpl implements InventoryService{
 
         return inventoryRepository.findByRoomOrderByDate(room)
                 .stream()
-                .map((element) -> modelMapper.map(element, InventoryDto.class))
-                .collect(Collectors.toList());
+                .map(inv -> modelMapper.map(inv, InventoryDto.class))
+                .toList();
+
+
     }
 
     @Override
@@ -114,7 +116,8 @@ public class InventoryServiceImpl implements InventoryService{
         }
 
         inventoryRepository.updateInventory(roomId,updateInventoryRequestDto.getStartDate(),
-                updateInventoryRequestDto.getEndDate(),updateInventoryRequestDto.getSurgeFactor());
+                updateInventoryRequestDto.getEndDate(),updateInventoryRequestDto.getSurgeFactor(),updateInventoryRequestDto.getClosed());
 
+        log.info("Inventory updated successfully");
     }
 }

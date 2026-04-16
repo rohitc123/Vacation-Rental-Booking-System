@@ -9,6 +9,7 @@ import com.example.AirBnb.App.entities.User;
 import com.example.AirBnb.App.exception.ForbiddenException;
 import com.example.AirBnb.App.exception.ResourceNotFoundException;
 import com.example.AirBnb.App.repository.HotelRepository;
+import com.example.AirBnb.App.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +31,19 @@ public class HotelServiceImpl implements HotelService{
     private final InventoryService inventoryService;
     private final RoomService roomService;
     private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
 
     @Override
     public HotelDto createHotel(HotelDto hotelDto) {
         log.info("Creating a new hotel with name: {}",hotelDto.getName());
         Hotel hotel= modelMapper.map(hotelDto,Hotel.class);
         hotel.setActive(false);
-        User user= getCurrentUser();
+//        User user= getCurrentUser();
+        User authenticatedUser = getCurrentUser();
+
+        // 3. RE-FETCH the user from the DB to make it "Managed" by Hibernate
+        User user = userRepository.findById(authenticatedUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + authenticatedUser.getId()));
         hotel.setOwner(user);
         Hotel saveHotel=hotelRepository.save(hotel);
         log.info("Created a new hotel with Id: {}",hotel.getId());

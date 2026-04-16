@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
 @Data
 public class InventoryDto {
     private Long id;
-    private Hotel hotel;
-    private Room room;
     private LocalDate date;
     private Integer bookedCount;
     private Integer reservedCount;

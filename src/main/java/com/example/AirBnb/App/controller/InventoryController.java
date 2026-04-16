@@ -3,6 +3,7 @@ package com.example.AirBnb.App.controller;
 import com.example.AirBnb.App.dto.InventoryDto;
 import com.example.AirBnb.App.dto.RoomDto;
 import com.example.AirBnb.App.dto.UpdateInventoryRequestDto;
+import com.example.AirBnb.App.entities.Inventory;
 import com.example.AirBnb.App.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
