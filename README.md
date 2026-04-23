@@ -107,3 +107,8 @@ Implemented using **Strategy + Decorator Pattern**:
 - **Build Tool:** Maven
 - **Scheduler:** Spring Scheduling
 - **Object Mapping:** ModelMapper
+
+  ## 📊 Database Schema
+The system uses a highly normalized PostgreSQL schema designed for high-concurrency booking and dynamic pricing.
+
+![Entity Relationship Diagram]("C:\Users\rc976\Downloads\Database Schema Diagram.png")
