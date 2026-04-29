@@ -108,7 +108,12 @@ Implemented using **Strategy + Decorator Pattern**:
 - **Scheduler:** Spring Scheduling
 - **Object Mapping:** ModelMapper
 
-  ## 📊 Database Schema
+  ### 📊 Database Schema
 The system uses a highly normalized PostgreSQL schema designed for high-concurrency booking and dynamic pricing.
 
-![Entity Relationship Diagram]("C:\Users\rc976\Downloads\Database Schema Diagram.png")
+![Entity Relationship Diagram](./Images/DatabaseSchemaDiagram.png)
+
+### Authentication API Testing
+Below is a screenshot of the Postman test for the user login and registration flow, demonstrating the generation of JWT tokens.
+
+![User Authentication Flow](./Images/auth.png)
