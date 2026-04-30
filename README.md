@@ -152,3 +152,12 @@ This screenshot displays the current state of a reservation. The system dynamica
 This screenshot from the database shows the `bookings` table, reflecting various reservation states: `CONFIRMED`, `CANCELLED`, and `PENDING`
 
 ![Database Booking Statuses](./Images/database.png)
+
+
+## API Documentation (Swagger)
+This project provides interactive API documentation using Swagger UI, 
+allowing easy testing of all booking, payment, and guest management endpoints.
+
+![Swagger UI](./Images/SwaggerUI1.png)
+![Swagger UI](./Images/SwaggerUI2.png)
+![Swagger UI](./Images/SwaggerUI3.png)
