@@ -1,6 +1,7 @@
 package com.example.AirBnb.App.entities;
 
 import com.example.AirBnb.App.entities.enums.BookingStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,6 +18,7 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -67,4 +69,6 @@ public class Booking {
     @Column(unique = true)
     private String paymentSessionId;
 
+    @Column(nullable = true)
+    private Boolean refunded = false;
 }

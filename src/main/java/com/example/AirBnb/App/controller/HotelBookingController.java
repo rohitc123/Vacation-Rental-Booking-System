@@ -28,6 +28,17 @@ public class HotelBookingController {
         return ResponseEntity.ok(bookingService.addGuests(bookingId,guestDtoList));
     }
 
+    @PutMapping("{bookingId}/guest/{guestId}")
+    public ResponseEntity<GuestDto> updateGuestById(@PathVariable Long guestId,@PathVariable Long bookingId,@RequestBody GuestDto guestDto){
+        return ResponseEntity.ok(bookingService.updateGuestById(guestId,bookingId,guestDto));
+    }
+
+    @DeleteMapping("{bookingId}/guest/{guestId}/delete")
+    public ResponseEntity<Void> deleteGuest(@PathVariable Long guestId,@PathVariable Long bookingId) {
+        bookingService.deleteGuest(guestId,bookingId);
+        return  ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{bookingId}/payments")
     public ResponseEntity<Map<String,String>> initiatePayment(@PathVariable Long bookingId){
         String sessionUrl=bookingService.initiatePayment(bookingId);
@@ -36,7 +47,7 @@ public class HotelBookingController {
 
     @PostMapping("/{bookingId}/cancel")
     public ResponseEntity<Void> cancelBooking(@PathVariable Long bookingId){
-        bookingService.cancelBooking(bookingId);
+        bookingService.cancelBookingWithRefund(bookingId);
         return ResponseEntity.noContent().build();
     }
 
@@ -44,6 +55,5 @@ public class HotelBookingController {
     public ResponseEntity<Map<String,String>> getBookingStatus(@PathVariable Long bookingId){
         return ResponseEntity.ok(Map.of("Status:",bookingService.getBookingStatus(bookingId)));
     }
-
-
+    
 }

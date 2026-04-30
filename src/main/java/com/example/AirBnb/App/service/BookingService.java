@@ -4,6 +4,7 @@ import com.example.AirBnb.App.dto.BookingDto;
 import com.example.AirBnb.App.dto.BookingRequest;
 import com.example.AirBnb.App.dto.GuestDto;
 import com.example.AirBnb.App.dto.HotelReportDto;
+import com.example.AirBnb.App.entities.Booking;
 import com.stripe.model.Event;
 
 import java.time.LocalDate;
@@ -14,11 +15,13 @@ public interface BookingService {
 
     BookingDto addGuests(Long bookingId, List<GuestDto> guestDtoList);
 
+    void deleteGuest(Long guestId, Long bookingId);
+
     String initiatePayment(Long bookingId);
 
     void capturePayment(Event event);
 
-    void cancelBooking(Long bookingId);
+    Booking cancelBooking(Long bookingId);
 
     String getBookingStatus(Long bookingId);
 
@@ -27,4 +30,8 @@ public interface BookingService {
     HotelReportDto getHotelReport(Long hotelId, LocalDate startDate, LocalDate endDate);
 
     List<BookingDto> getMyBooking();
+
+    GuestDto updateGuestById(Long guestId,Long bookingId, GuestDto guestDto);
+
+    void cancelBookingWithRefund(Long bookingId);
 }

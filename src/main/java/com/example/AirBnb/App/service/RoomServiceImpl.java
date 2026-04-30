@@ -15,7 +15,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.example.AirBnb.App.util.AppUtils.getCurrentUser;
@@ -123,11 +126,31 @@ public class RoomServiceImpl implements RoomService{
         modelMapper.map(roomDto,room);
 //        room.setId(roomId);
 
-        //TODO:if price and inventory is updated then update the inventory for this room
+        //if price and inventory is updated then update the inventory for this room
+
+        BigDecimal oldBasePrice = room.getBasePrice();
+        Integer oldTotalCount = room.getTotalCount();
+
+        modelMapper.map(roomDto, room);
+
+        //for avoiding nullPointerException used as Objects.equals()
+        boolean isPriceChanged = !Objects.equals(oldBasePrice, room.getBasePrice());
+        boolean isInventoryChanged = !Objects.equals(oldTotalCount, room.getTotalCount());
 
         room=roomRepository.save(room);
 
+        //if price updated then update prices for future inventory
+        if (isPriceChanged) {
+            inventoryService.updateFuturePrices(room.getId(),room.getBasePrice(), LocalDate.now());
+        }
 
-        return modelMapper.map(room,RoomDto.class);
+        // Total room count change → adjust inventory availability of rooms
+        if (isInventoryChanged) {
+            inventoryService.updateInventoryCount(room.getId(), oldTotalCount, room.getTotalCount());
+        }
+
+
+        return modelMapper.map(room, RoomDto.class);
+
     }
 }

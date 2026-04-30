@@ -1,6 +1,7 @@
 package com.example.AirBnb.App.entities;
 
 import com.example.AirBnb.App.entities.enums.Gender;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Guest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

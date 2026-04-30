@@ -120,4 +120,37 @@ public class InventoryServiceImpl implements InventoryService{
 
         log.info("Inventory updated successfully");
     }
+
+    @Override
+    public void updateFuturePrices(Long roomId, BigDecimal newPrice, LocalDate today) {
+        inventoryRepository.updateFuturePrices(roomId,newPrice,today);
+    }
+
+    @Override
+    public void updateInventoryCount(Long roomId, Integer oldCount, Integer newCount) {
+        int diff = newCount - oldCount;
+        LocalDate today = LocalDate.now();
+
+        List<Inventory> inventories =
+                inventoryRepository.findByRoomIdAndDateGreaterThanEqual(roomId, today);
+
+        for (Inventory inv : inventories) {
+
+            int currentAvailable = inv.getTotalCount()
+                    - inv.getBookedCount()
+                    - inv.getReservedCount();
+
+            if (currentAvailable + diff < 0) {
+                throw new IllegalStateException(
+                        "Cannot reduce room count. Existing bookings exceed new capacity."
+                );
+            }
+
+            // Update total capacity
+            inv.setTotalCount(inv.getTotalCount() + diff);
+        }
+
+        inventoryRepository.saveAll(inventories);
+
+    }
 }

@@ -49,6 +49,4 @@ public class Room {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-
-
 }

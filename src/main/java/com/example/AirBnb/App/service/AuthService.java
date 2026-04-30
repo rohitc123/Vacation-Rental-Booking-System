@@ -45,8 +45,6 @@ public class AuthService {
         newUser=userRepository.save(newUser);
         return modelMapper.map(newUser,UserDto.class);
 
-
-
     }
 
     public String[] login(LoginDto loginDto){

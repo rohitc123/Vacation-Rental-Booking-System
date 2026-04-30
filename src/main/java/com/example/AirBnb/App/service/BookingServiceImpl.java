@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -155,6 +154,94 @@ public class BookingServiceImpl implements BookingService{
     }
 
     @Override
+    public GuestDto updateGuestById(Long guestId,Long bookingId, GuestDto guestDto) {
+        log.info("Updating guest by guest ID:{}",guestId);
+
+        Booking booking= bookingRepository.findById(bookingId)
+                .orElseThrow(()->new ResourceNotFoundException("Booking id not found"+bookingId));
+
+        User user=getCurrentUser();
+
+        if (!user.getId().equals(booking.getUser().getId())) {
+            throw new ForbiddenException("Booking does not belong to the current user");
+        }
+
+        //check  booking is expired or not
+        if(hasBookingExpired(booking)){
+            throw new IllegalStateException("booking has already expired");
+        }
+
+        //check booking status is reserved or not
+        if(booking.getBookingStatus()!=BookingStatus.GUESTS_ADDED){
+            throw  new IllegalStateException("booking is not under reserved state , cannot add guest");
+        }
+
+        Guest guest = guestRepository.findById(guestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Guest not found with id: " + guestId));
+
+        if (!guest.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("You are not allowed to update this guest");
+        }
+
+        guest.setName(guestDto.getName());
+        guest.setAge(guestDto.getAge());
+        guest.setGender(guestDto.getGender());
+
+        guest = guestRepository.save(guest);
+
+        return modelMapper.map(guest, GuestDto.class);
+    }
+
+
+
+
+    @Override
+    public void deleteGuest(Long guestId, Long bookingId) {
+        log.info("Deleting guest with id: {}", guestId);
+
+        Booking booking= bookingRepository.findById(bookingId)
+                .orElseThrow(()->new ResourceNotFoundException("Booking id not found"+bookingId));
+
+        User user=getCurrentUser();
+
+        if (!user.getId().equals(booking.getUser().getId())) {
+            throw new ForbiddenException("Booking does not belong to the current user");
+        }
+
+
+
+        //check  booking is expired or not
+        if(hasBookingExpired(booking)){
+            throw new IllegalStateException("booking has already expired");
+        }
+
+        Guest guest = guestRepository.findById(guestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Guest not found with id: " +guestId));
+
+        if (guest.getUser() == null || !guest.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("You are not allowed to modify this guest");
+        }
+
+
+        // Find all bookings containing this guest
+        booking.getGuests().remove(guest);
+        bookingRepository.saveAndFlush(booking);  // Use saveAndFlush instead of save
+
+
+
+        List<Booking> otherBookings = bookingRepository.findBookingsByGuestsId(guestId);
+
+        // Only delete the guest if not associated with any other booking
+        if (otherBookings.isEmpty()) {
+            guestRepository.deleteById(guestId);  // Use deleteById, not delete(guest)
+            log.info("Guest {} permanently deleted from database", guestId);
+        } else {
+            log.info("Guest {} removed from booking {} but kept in database (present in {} other bookings)",
+                    guestId, bookingId, otherBookings.size());
+        }
+    }
+
+    @Override
     @Transactional
     public String initiatePayment(Long bookingId) {
         Booking booking=bookingRepository.findById(bookingId)
@@ -214,7 +301,17 @@ public class BookingServiceImpl implements BookingService{
 
     @Override
     @Transactional
-    public void cancelBooking(Long bookingId) {
+    public void cancelBookingWithRefund(Long bookingId) {
+        Booking booking = cancelBooking(bookingId);
+
+        processRefund(booking);
+
+    }
+
+
+    @Override
+    @Transactional
+    public Booking cancelBooking(Long bookingId) {
         log.info("Cancelling the booking of this booking id:{}",bookingId);
         Booking booking=bookingRepository.findById(bookingId)
                 .orElseThrow(()->new ResourceNotFoundException("Booking not found with id:"+bookingId));
@@ -240,7 +337,16 @@ public class BookingServiceImpl implements BookingService{
         inventoryRepository.cancelBooking(booking.getHotel().getId(),booking.getRoom().getId(),
                 booking.getCheckInDate(),booking.getCheckOutDate(),booking.getRoomsCount());
 
-        //handle refund
+        log.info("Booking has been successfully cancelled for booking id: {}", bookingId);
+
+        return booking;
+    }
+
+    private void processRefund(Booking booking) {
+        if (Boolean.TRUE.equals(booking.getRefunded())) {
+            log.warn("Booking {} already refunded", booking.getId());
+            return;
+        }
 
         try {
             //Retrieve the Stripe Session to get the PaymentIntent ID
@@ -248,12 +354,16 @@ public class BookingServiceImpl implements BookingService{
             RefundCreateParams refundParam=RefundCreateParams.builder()
                     .setPaymentIntent(session.getPaymentIntent())
                     .build();
-            Refund.create(refundParam);
-        } catch (StripeException e) {
-            throw new RuntimeException(e);
-        }
 
-        log.info("Booking has been successfully cancelled of this booking id:{}",bookingId);
+            Refund refund = Refund.create(refundParam);
+
+            // Mark as refunded
+            booking.setRefunded(true);
+            bookingRepository.save(booking);
+            log.info("Refund successful for booking {}", booking.getId());
+        } catch (StripeException e) {
+            log.error("Refund failed for booking {}", booking.getId(), e);
+        }
 
     }
 
@@ -338,6 +448,8 @@ public class BookingServiceImpl implements BookingService{
                 .map((element) -> modelMapper.map(element, BookingDto.class))
                 .collect(Collectors.toList());
     }
+
+
 
 
     public boolean hasBookingExpired(Booking booking){

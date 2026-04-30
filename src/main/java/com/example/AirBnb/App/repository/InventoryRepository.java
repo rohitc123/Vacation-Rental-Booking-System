@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -173,4 +174,16 @@ public interface InventoryRepository extends JpaRepository<Inventory,Long> {
     List<Inventory> findByHotelAndDateBetween(Hotel hotel, LocalDate startDate, LocalDate endDate);
 
     List<Inventory> findByRoomOrderByDate(Room room);
+
+    @Modifying
+    @Transactional
+    @Query("""
+                UPDATE Inventory i
+                SET i.price = :price
+                WHERE i.room.id = :roomId
+                AND i.date >= :today
+            """)
+    void updateFuturePrices(Long roomId, BigDecimal price, LocalDate today);
+
+    List<Inventory> findByRoomIdAndDateGreaterThanEqual(Long roomId, LocalDate today);
 }

@@ -8,6 +8,8 @@ import com.example.AirBnb.App.entities.Inventory;
 import com.example.AirBnb.App.entities.Room;
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface InventoryService {
@@ -21,4 +23,8 @@ public interface InventoryService {
     List<InventoryDto> getAllInventoryByRoom(Long roomId);
 
     void updateInventoryByRoomId(Long roomId, UpdateInventoryRequestDto updateInventoryRequestDto);
+
+    void updateFuturePrices(Long roomId, BigDecimal newPrice, LocalDate today);
+
+    void updateInventoryCount(Long id, Integer oldTotalCount, Integer totalCount);
 }
