@@ -44,13 +44,15 @@ A **scalable, production-ready backend system** for a vacation rental platform t
 - Search & filter hotels
 - View hotel and room details
 
-#### Booking Workflow:
+###### End-to-End Booking Flow
 
-- Initiate booking
-- Add / update / delete guests
-- Initiate payment
-- View booking status
-- Cancel booking
+1. User logs in and receives JWT token  
+2. Searches hotels with filters  
+3. Initiates booking for selected room  
+4. Adds guest details  
+5. Initiates payment  
+6. Receives confirmation via webhook  
+7. Booking status updated to confirmed  
 
 ---
 
