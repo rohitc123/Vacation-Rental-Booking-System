@@ -44,6 +44,9 @@ A **scalable, production-ready backend system** for a vacation rental platform t
 - Search & filter hotels
 - View hotel and room details
 
+---
+  
+
 ### End to End Booking Flow
 
 1. User logs in and receives JWT token  
