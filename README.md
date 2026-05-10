@@ -1,4 +1,4 @@
-# 🚀 Vacation Rental Booking System
+# 🚀 Scalable Vacation Rental Booking System
 
 A **scalable, production-ready backend system** for a vacation rental platform that supports **hotel management, real-time booking, dynamic pricing, and secure payment processing**.
 
